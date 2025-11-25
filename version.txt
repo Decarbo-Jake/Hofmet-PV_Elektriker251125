@@ -1,0 +1,6 @@
+VERSION 2.0.0
+Last Updated: 2024-11-25 13:45 UTC
+Deployment: FORCE CACHE BREAK
+
+This file forces Vercel to recognize new deployment.
+If you can see this file, the new version is deployed.
