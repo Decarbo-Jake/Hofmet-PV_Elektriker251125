@@ -1,4 +1,4 @@
-# PV Daten für Elektriker Partner
+# PV Daten für Elektriker  Partner  
 
 Eine Progressive Web App (PWA) zur Erfassung von PV-Anlagen-Daten für Elektriker Partner von Hoffmann Metallbau GmbH & CO. KG.
 
