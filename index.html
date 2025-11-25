@@ -612,6 +612,105 @@
             color: white;
             box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
         }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #0066cc;
+        }
+
+        .checkbox-label {
+            font-size: 15px;
+            color: #2d2d2d;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 0;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        .checkbox-label:hover {
+            color: #0066cc;
+        }
+
+        .foto-upload-container {
+            background: #f0f8ff;
+            padding: 25px;
+            border-radius: 8px;
+            border: 2px dashed #0066cc;
+            margin-top: 10px;
+        }
+
+        .upload-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn-upload {
+            padding: 20px;
+            background: white;
+            border: 2px solid #0066cc;
+            color: #0066cc;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-upload:hover {
+            background: #0066cc;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+        }
+
+        .btn-upload:active {
+            transform: translateY(0);
+        }
+
+        .upload-info {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #0066cc;
+        }
+
+        .upload-info p {
+            margin: 8px 0;
+            font-size: 13px;
+            color: #2d2d2d;
+            line-height: 1.6;
+        }
+
+        .upload-info strong {
+            color: #0066cc;
+        }
+
+        @media (max-width: 600px) {
+            .upload-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-upload {
+                padding: 18px;
+                font-size: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -667,6 +766,13 @@
                     <div class="form-group">
                         <label for="ort">Ort</label>
                         <input type="text" id="ort" placeholder="z.B. Dortmund">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="bestandsanlage" name="bestandsanlage">
+                        <label for="bestandsanlage" class="checkbox-label">Bestandsanlage</label>
                     </div>
                 </div>
 
@@ -841,7 +947,23 @@
 
                 <div class="form-group">
                     <label for="fotos">Fotos hochladen</label>
-                    <input type="file" id="fotos" accept="image/*" multiple capture="environment">
+                    <div class="foto-upload-container">
+                        <div class="upload-buttons">
+                            <button type="button" class="btn-upload" onclick="document.getElementById('fotoKamera').click()">
+                                📷 Foto aufnehmen
+                            </button>
+                            <button type="button" class="btn-upload" onclick="document.getElementById('fotosDatei').click()">
+                                📁 Fotos auswählen
+                            </button>
+                        </div>
+                        <input type="file" id="fotoKamera" accept="image/*" capture="environment" multiple style="display: none;">
+                        <input type="file" id="fotosDatei" accept="image/*" multiple style="display: none;">
+                        <div class="upload-info">
+                            <p>📱 <strong>Handy:</strong> "Foto aufnehmen" öffnet die Kamera</p>
+                            <p>💻 <strong>Computer:</strong> "Fotos auswählen" öffnet Dateien</p>
+                            <p>✅ Mehrere Fotos können gleichzeitig hochgeladen werden</p>
+                        </div>
+                    </div>
                     <div id="fotoPreview" class="foto-preview"></div>
                 </div>
 
@@ -875,11 +997,24 @@
         let formData = {};
         let uploadedPhotos = [];
 
-        // Foto Upload Handler
-        document.getElementById('fotos').addEventListener('change', function(e) {
-            const files = Array.from(e.target.files);
+        // Foto Upload Handler - Kamera
+        document.getElementById('fotoKamera').addEventListener('change', function(e) {
+            handlePhotoUpload(e.target.files);
+            e.target.value = ''; // Reset für erneute Nutzung
+        });
+
+        // Foto Upload Handler - Datei
+        document.getElementById('fotosDatei').addEventListener('change', function(e) {
+            handlePhotoUpload(e.target.files);
+            e.target.value = ''; // Reset für erneute Nutzung
+        });
+
+        function handlePhotoUpload(files) {
+            const fileArray = Array.from(files);
             
-            files.forEach(file => {
+            if (fileArray.length === 0) return;
+            
+            fileArray.forEach(file => {
                 if (file.type.startsWith('image/')) {
                     const reader = new FileReader();
                     
@@ -896,10 +1031,7 @@
                     reader.readAsDataURL(file);
                 }
             });
-            
-            // Reset input to allow same file again
-            e.target.value = '';
-        });
+        }
 
         function displayPhotoPreview() {
             const preview = document.getElementById('fotoPreview');
@@ -1056,7 +1188,8 @@
                     telefon: document.getElementById('telefon').value,
                     strasse: document.getElementById('strasse').value,
                     plz: document.getElementById('plz').value,
-                    ort: document.getElementById('ort').value
+                    ort: document.getElementById('ort').value,
+                    bestandsanlage: document.getElementById('bestandsanlage').checked
                 },
                 system: {
                     wechselrichter: document.getElementById('wechselrichter').options[document.getElementById('wechselrichter').selectedIndex].text,
@@ -1107,6 +1240,9 @@
                 if (formData.kunde.plz && formData.kunde.ort) ortText += ' ';
                 if (formData.kunde.ort) ortText += formData.kunde.ort;
                 html += '<div class="summary-item"><span class="summary-label">PLZ / Ort:</span><span class="summary-value">' + ortText + '</span></div>';
+            }
+            if (formData.kunde.bestandsanlage) {
+                html += '<div class="summary-item"><span class="summary-label">Bestandsanlage:</span><span class="summary-value" style="color: #0066cc; font-weight: 600;">Ja</span></div>';
             }
             html += '</div>';
             
@@ -1250,6 +1386,15 @@
                     if (formData.kunde.plz && formData.kunde.ort) ortText += ' ';
                     if (formData.kunde.ort) ortText += formData.kunde.ort;
                     pdf.text('PLZ / Ort: ' + ortText, 25, yPos);
+                    yPos += 7;
+                }
+                
+                if (formData.kunde.bestandsanlage) {
+                    pdf.setTextColor(0, 102, 204);
+                    pdf.setFontSize(12);
+                    pdf.text('Bestandsanlage: Ja', 25, yPos);
+                    pdf.setTextColor(0, 0, 0);
+                    pdf.setFontSize(11);
                     yPos += 7;
                 }
                 
@@ -1428,7 +1573,8 @@
                     'E-Mail: ' + formData.kunde.email + '\n' +
                     'Telefon: ' + formData.kunde.telefon + 
                     (formData.kunde.strasse ? '\nStraße: ' + formData.kunde.strasse : '') +
-                    (formData.kunde.plz || formData.kunde.ort ? '\nPLZ / Ort: ' + (formData.kunde.plz || '') + (formData.kunde.plz && formData.kunde.ort ? ' ' : '') + (formData.kunde.ort || '') : '') + '\n\n' +
+                    (formData.kunde.plz || formData.kunde.ort ? '\nPLZ / Ort: ' + (formData.kunde.plz || '') + (formData.kunde.plz && formData.kunde.ort ? ' ' : '') + (formData.kunde.ort || '') : '') +
+                    (formData.kunde.bestandsanlage ? '\nBestandsanlage: Ja' : '') + '\n\n' +
                     'System:\n' +
                     'Wechselrichter: ' + formData.system.wechselrichter +
                     (formData.system.zerezId ? '\nWR Zerez ID: ' + formData.system.zerezId : '') +
