@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PV Daten für Elektriker Partner - Hoffmann Metallbau</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="theme-color" content="#0066cc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed'));
+            });
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            padding: 30px;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0066cc 0%, #0052a3 100%);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header-logo {
+            width: 100px;
+            height: 100px;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            flex-shrink: 0;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+            object-fit: contain;
+            border: 2px solid rgba(255,255,255,0.4);
+        }
+
+        .header-text {
+            flex: 1;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            font-size: 15px;
+            opacity: 0.9;
+            font-weight: 300;
+            margin: 0;
+        }
+
+        @media (max-width: 600px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .header-logo {
+                width: 70px;
+                height: 70px;
+            }
+        }
+
+        .form-section, .summary-section {
+            padding: 30px;
+        }
+
+        .form-section {
+            display: block;
+        }
+
+        .summary-section {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            color: #2d2d2d;
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #d0d0d0;
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: inherit;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+        }
+
+        select {
+            cursor: pointer;
+            background-color: white;
+        }
+
+        .calculator-section {
+            background: #fafafa;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid #0066cc;
+        }
+
+        .calculator-section h3 {
+            color: #2d2d2d;
+            margin-bottom: 15px;
+            font-size: 20px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .module-info {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 15px;
+            color: #2d2d2d;
+        }
+
+        .module-info strong {
+            color: #0066cc;
+        }
+
+        .module-performance {
+            background: #e6f2ff;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .performance-label {
+            font-size: 14px;
+            color: #2d2d2d;
+            font-weight: 500;
+        }
+
+        .performance-value {
+            font-size: 18px;
+            color: #0066cc;
+            font-weight: 600;
+        }
+
+        .calc-input-group {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .calc-input-group .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .result-box {
+            background: white;
+            padding: 25px;
+            margin-top: 15px;
+            border: 2px solid #0066cc;
+            box-shadow: 0 2px 10px rgba(0, 102, 204, 0.1);
+        }
+
+        .result-box h4 {
+            color: #2d2d2d;
+            margin-bottom: 10px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .result-value {
+            font-size: 42px;
+            font-weight: 300;
+            color: #0066cc;
+        }
+
+        .result-unit {
+            font-size: 20px;
+            color: #2d2d2d;
+            margin-left: 8px;
+            font-weight: 300;
+        }
+
+        .zerez-id {
+            background: #e6f2ff;
+            padding: 12px 18px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #2d2d2d;
+            display: none;
+            border-left: 3px solid #0066cc;
+        }
+
+        .zerez-id.show {
+            display: block;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 16px 35px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052a3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 102, 204, 0.3);
+        }
+
+        .btn-secondary {
+            background: #2d2d2d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1a1a1a;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .calc-input-group {
+                flex-direction: column;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+
+        .info-box {
+            background: #e6f2ff;
+            border-left: 4px solid #0066cc;
+            padding: 15px 18px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            margin: 0;
+            font-size: 14px;
+            color: #2d2d2d;
+            line-height: 1.6;
+        }
+
+        .summary-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .summary-card {
+            background: #fafafa;
+            padding: 20px;
+            border-left: 4px solid #0066cc;
+        }
+
+        .summary-card h3 {
+            color: #2d2d2d;
+            margin-bottom: 15px;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-weight: 500;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .summary-value {
+            color: #2d2d2d;
+            font-size: 14px;
+        }
+
+        .highlight-box {
+            background: white;
+            border: 2px solid #0066cc;
+            padding: 25px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .highlight-box .big-number {
+            font-size: 48px;
+            font-weight: 300;
+            color: #0066cc;
+        }
+
+        .highlight-box .label {
+            font-size: 14px;
+            color: #2d2d2d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            border: 2px dashed #0066cc;
+            background: #f0f8ff;
+            cursor: pointer;
+        }
+
+        input[type="file"]:hover {
+            background: #e6f2ff;
+        }
+
+        .foto-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .foto-item {
+            position: relative;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .foto-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .foto-item .remove-foto {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .foto-item .remove-foto:hover {
+            background: #cc0000;
+        }
+
+        .slider-section {
+            background: #f0f8ff;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 4px solid #0066cc;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .slider-section h3 {
+            color: #2d2d2d;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .slider-container {
+            margin-bottom: 20px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #d3d3d3;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #0066cc;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #0066cc;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            background: #0052a3;
+            transform: scale(1.1);
+        }
+
+        .slider::-moz-range-thumb:hover {
+            background: #0052a3;
+            transform: scale(1.1);
+        }
+
+        .slider-value {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 500;
+            color: #0066cc;
+            margin-top: 10px;
+        }
+
+        .capacity-box {
+            background: white;
+            padding: 25px;
+            margin-top: 20px;
+            border: 2px solid #0066cc;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 102, 204, 0.1);
+        }
+
+        .capacity-box h4 {
+            color: #2d2d2d;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .capacity-display {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .capacity-value {
+            font-size: 48px;
+            font-weight: 300;
+            color: #0066cc;
+        }
+
+        .capacity-unit {
+            font-size: 24px;
+            color: #2d2d2d;
+            margin-left: 8px;
+            font-weight: 300;
+        }
+
+        .capacity-detail {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .capacity-detail span {
+            color: #0066cc;
+            font-weight: 500;
+        }
+
+        .button-group-inline {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn-basis {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #d0d0d0;
+            background: white;
+            color: #2d2d2d;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 8px;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        .btn-basis:hover {
+            border-color: #0066cc;
+            background: #f0f8ff;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-basis.active {
+            border-color: #0066cc;
+            background: #0066cc;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <img src="logo.png" alt="Hoffmann Metallbau Logo" class="header-logo">
+                <div class="header-text">
+                    <h1>PV Daten für Elektriker Partner</h1>
+                    <p>Hoffmann Metallbau GmbH & CO. KG • Meerbusch</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORMULAR SEITE -->
+        <div class="form-section" id="formSection">
+            <form id="pvForm">
+                <div class="info-box">
+                    <p><strong>Hinweis:</strong> Füllen Sie alle relevanten Felder aus. Die Daten werden für die Erstellung des Angebots verwendet.</p>
+                </div>
+
+                <!-- Kundendaten -->
+                <h2 style="margin-bottom: 20px; color: #2d2d2d; font-weight: 400; text-transform: uppercase; letter-spacing: 1px;">Kundendaten</h2>
+                
+                <div class="form-group">
+                    <label for="kundenname">Kundenname *</label>
+                    <input type="text" id="kundenname" required>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="email">E-Mail *</label>
+                        <input type="email" id="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefon">Telefon *</label>
+                        <input type="tel" id="telefon" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="strasse">Straße und Hausnummer</label>
+                    <input type="text" id="strasse" placeholder="z.B. Hauptstraße 123">
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="plz">PLZ</label>
+                        <input type="text" id="plz" placeholder="z.B. 44139" maxlength="5">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ort">Ort</label>
+                        <input type="text" id="ort" placeholder="z.B. Dortmund">
+                    </div>
+                </div>
+
+                <!-- Systemauswahl -->
+                <h2 style="margin: 40px 0 20px 0; color: #2d2d2d; font-weight: 400; text-transform: uppercase; letter-spacing: 1px;">Systemauswahl</h2>
+
+                <div class="form-group">
+                    <label for="wechselrichter">Wechselrichter *</label>
+                    <select id="wechselrichter" required>
+                        <option value="">-- Bitte auswählen --</option>
+                        <optgroup label="FENECON">
+                            <option data-zerez="ZE-J0XY-GS5R-0001">FENECON home 6 V2</option>
+                            <option data-zerez="ZE-J0XY-GS5R-0002">FENECON home 10 V2</option>
+                            <option data-zerez="ZE-J0XY-GS5R-0003">FENECON home 15</option>
+                            <option data-zerez="ZE-J0XY-CYDZ-0001">FENECON home 20</option>
+                        </optgroup>
+                        <optgroup label="SIGEN">
+                            <option data-zerez="ZE-Q3LN-RRAD-0002">SIGEN Hybrid 5.0 TP</option>
+                            <option data-zerez="ZE-Q3LN-RRAD-0006">SIGEN Hybrid 8.0 TP</option>
+                            <option data-zerez="ZE-Q3LN-RRAD-0008">SIGEN Hybrid 10.0 TP</option>
+                            <option data-zerez="ZE-Q3LN-RRAD-0011">SIGEN Stor EC 15.0 TP</option>
+                        </optgroup>
+                    </select>
+                    <div id="zerezIdWR" class="zerez-id"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="speicher">Speichersystem *</label>
+                    <select id="speicher" required>
+                        <option value="">-- Bitte auswählen --</option>
+                        <option value="Fenecon Home">Fenecon Home</option>
+                        <option value="Sigenergy">Sigenergy</option>
+                    </select>
+                </div>
+
+                <!-- Fenecon Home Slider (wird nur angezeigt wenn Fenecon Home gewählt) -->
+                <div id="feneconModuleSection" class="slider-section" style="display: none;">
+                    <h3>Fenecon Batterie Module</h3>
+                    <div class="slider-container">
+                        <input type="range" id="feneconModules" min="0" max="20" value="0" class="slider">
+                        <div class="slider-value">
+                            <span id="moduleCount">0</span> Module
+                        </div>
+                    </div>
+                    
+                    <div class="capacity-box">
+                        <h4>Speicherkapazität</h4>
+                        <div class="capacity-display">
+                            <span class="capacity-value" id="speicherkapazitaet">8.4</span>
+                            <span class="capacity-unit">kWh</span>
+                        </div>
+                        <div class="capacity-detail">
+                            Basis: 8,4 kWh + <span id="additionalCapacity">0</span> kWh
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sigenergy Section (wird nur angezeigt wenn Sigenergy gewählt) -->
+                <div id="sigenergyModuleSection" class="slider-section" style="display: none;">
+                    <h3>Sigenergy Basis Speicherkapazität</h3>
+                    
+                    <div class="button-group-inline">
+                        <button type="button" class="btn-basis active" data-capacity="6" id="basis6kw">6 kWh Basis</button>
+                        <button type="button" class="btn-basis" data-capacity="9" id="basis9kw">9 kWh Basis</button>
+                    </div>
+
+                    <div style="margin-top: 25px;">
+                        <h4 style="margin-bottom: 15px; color: #2d2d2d; font-size: 16px;">Anzahl 6 kWh Module</h4>
+                        <div class="slider-container">
+                            <input type="range" id="sigen6kwModules" min="0" max="10" value="0" class="slider">
+                            <div class="slider-value">
+                                <span id="sigen6kwCount">0</span> Module
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 25px;">
+                        <h4 style="margin-bottom: 15px; color: #2d2d2d; font-size: 16px;">Anzahl 9 kWh Module</h4>
+                        <div class="slider-container">
+                            <input type="range" id="sigen9kwModules" min="0" max="10" value="0" class="slider">
+                            <div class="slider-value">
+                                <span id="sigen9kwCount">0</span> Module
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="capacity-box">
+                        <h4>Gesamt-Speicherkapazität</h4>
+                        <div class="capacity-display">
+                            <span class="capacity-value" id="sigenergyKapazitaet">6</span>
+                            <span class="capacity-unit">kWh</span>
+                        </div>
+                        <div class="capacity-detail">
+                            Basis: <span id="sigenBasis">6</span> kWh + 
+                            6kWh-Module: <span id="sigen6kwTotal">0</span> kWh + 
+                            9kWh-Module: <span id="sigen9kwTotal">0</span> kWh
+                        </div>
+                    </div>
+                </div>
+
+                <!-- kWp Rechner -->
+                <div class="calculator-section">
+                    <h3>kWp-Rechner</h3>
+                    
+                    <div class="module-info">
+                        <strong>PV Modul:</strong> AIKO-A475-MCE54Db Neostar 3S+
+                    </div>
+                    
+                    <div class="module-performance">
+                        <span class="performance-label">Leistung PV Modul:</span>
+                        <span class="performance-value">475 Wp</span>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 15px; color: #2d2d2d; font-size: 16px;">Anzahl der Module</h4>
+                        <div class="slider-container">
+                            <input type="range" id="modulAnzahl" min="0" max="50" value="20" class="slider">
+                            <div class="slider-value">
+                                <span id="moduleAnzahlDisplay">20</span> Module
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-box">
+                        <h4>Gesamtleistung</h4>
+                        <span class="result-value" id="kwpResult">9.50</span>
+                        <span class="result-unit">kWp</span>
+                    </div>
+                </div>
+
+                <!-- Zusatzinformationen -->
+                <h2 style="margin: 40px 0 20px 0; color: #2d2d2d; font-weight: 400; text-transform: uppercase; letter-spacing: 1px;">Zusatzinformationen zur Anlage</h2>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="dachausrichtung">Dachausrichtung</label>
+                        <select id="dachausrichtung">
+                            <option value="">-- Bitte auswählen --</option>
+                            <option value="Süd">Süd</option>
+                            <option value="Süd-West">Süd-West</option>
+                            <option value="Süd-Ost">Süd-Ost</option>
+                            <option value="West">West</option>
+                            <option value="Ost">Ost</option>
+                            <option value="Ost-West">Ost-West</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dachneigung">Dachneigung (°)</label>
+                        <input type="number" id="dachneigung" min="0" max="90" placeholder="z.B. 30">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="stromverbrauch">Jahresstromverbrauch (kWh)</label>
+                    <input type="number" id="stromverbrauch" placeholder="z.B. 4500">
+                </div>
+
+                <div class="form-group">
+                    <label for="wallbox">Wallbox gewünscht?</label>
+                    <select id="wallbox">
+                        <option value="Nein">Nein</option>
+                        <option value="Ja">Ja</option>
+                        <option value="Später">Später / In Planung</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="bemerkungen">Bemerkungen / Besonderheiten</label>
+                    <textarea id="bemerkungen" rows="4" placeholder="Zusätzliche Informationen..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="fotos">Fotos hochladen</label>
+                    <input type="file" id="fotos" accept="image/*" multiple capture="environment">
+                    <div id="fotoPreview" class="foto-preview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="datum">Datum *</label>
+                    <input type="date" id="datum" required>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">Zusammenfassung erstellen →</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ZUSAMMENFASSUNGS SEITE -->
+        <div class="summary-section" id="summarySection">
+            <div class="info-box">
+                <p><strong>Prüfen Sie die Angaben</strong> und senden Sie das PDF per E-Mail an info@hofmet.de</p>
+            </div>
+
+            <div id="summaryContent"></div>
+
+            <div class="button-group">
+                <button type="button" class="btn-secondary" onclick="backToForm()">← Zurück zur Bearbeitung</button>
+                <button type="button" class="btn-primary" onclick="sendPDF()">PDF Absenden →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let formData = {};
+        let uploadedPhotos = [];
+
+        // Foto Upload Handler
+        document.getElementById('fotos').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        const photoData = {
+                            data: event.target.result,
+                            name: file.name
+                        };
+                        
+                        uploadedPhotos.push(photoData);
+                        displayPhotoPreview();
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Reset input to allow same file again
+            e.target.value = '';
+        });
+
+        function displayPhotoPreview() {
+            const preview = document.getElementById('fotoPreview');
+            preview.innerHTML = '';
+            
+            uploadedPhotos.forEach((photo, index) => {
+                const div = document.createElement('div');
+                div.className = 'foto-item';
+                
+                const img = document.createElement('img');
+                img.src = photo.data;
+                img.alt = photo.name;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-foto';
+                removeBtn.innerHTML = '×';
+                removeBtn.type = 'button';
+                removeBtn.onclick = () => removePhoto(index);
+                
+                div.appendChild(img);
+                div.appendChild(removeBtn);
+                preview.appendChild(div);
+            });
+        }
+
+        function removePhoto(index) {
+            uploadedPhotos.splice(index, 1);
+            displayPhotoPreview();
+        }
+
+        // Speichersystem Auswahl und Fenecon Module Slider
+        let sigenergyBasisCapacity = 6; // Default 6 kWh
+
+        document.getElementById('speicher').addEventListener('change', function() {
+            const selectedSystem = this.value;
+            const feneconSection = document.getElementById('feneconModuleSection');
+            const sigenergySection = document.getElementById('sigenergyModuleSection');
+            
+            if (selectedSystem === 'Fenecon Home') {
+                feneconSection.style.display = 'block';
+                sigenergySection.style.display = 'none';
+                calculateFeneconCapacity();
+            } else if (selectedSystem === 'Sigenergy') {
+                feneconSection.style.display = 'none';
+                sigenergySection.style.display = 'block';
+                calculateSigenergyCapacity();
+            } else {
+                feneconSection.style.display = 'none';
+                sigenergySection.style.display = 'none';
+            }
+        });
+
+        // Sigenergy Basis Buttons
+        document.getElementById('basis6kw').addEventListener('click', function() {
+            document.getElementById('basis6kw').classList.add('active');
+            document.getElementById('basis9kw').classList.remove('active');
+            sigenergyBasisCapacity = 6;
+            calculateSigenergyCapacity();
+        });
+
+        document.getElementById('basis9kw').addEventListener('click', function() {
+            document.getElementById('basis9kw').classList.add('active');
+            document.getElementById('basis6kw').classList.remove('active');
+            sigenergyBasisCapacity = 9;
+            calculateSigenergyCapacity();
+        });
+
+        // Sigenergy 6kWh Module Slider
+        document.getElementById('sigen6kwModules').addEventListener('input', function() {
+            const count = parseInt(this.value);
+            document.getElementById('sigen6kwCount').textContent = count;
+            calculateSigenergyCapacity();
+        });
+
+        // Sigenergy 9kWh Module Slider
+        document.getElementById('sigen9kwModules').addEventListener('input', function() {
+            const count = parseInt(this.value);
+            document.getElementById('sigen9kwCount').textContent = count;
+            calculateSigenergyCapacity();
+        });
+
+        function calculateSigenergyCapacity() {
+            const modules6kw = parseInt(document.getElementById('sigen6kwModules').value);
+            const modules9kw = parseInt(document.getElementById('sigen9kwModules').value);
+            
+            const capacity6kw = modules6kw * 6;
+            const capacity9kw = modules9kw * 9;
+            const totalCapacity = sigenergyBasisCapacity + capacity6kw + capacity9kw;
+            
+            document.getElementById('sigenBasis').textContent = sigenergyBasisCapacity;
+            document.getElementById('sigen6kwTotal').textContent = capacity6kw;
+            document.getElementById('sigen9kwTotal').textContent = capacity9kw;
+            document.getElementById('sigenergyKapazitaet').textContent = totalCapacity;
+        }
+
+        // Fenecon Module Slider
+        document.getElementById('feneconModules').addEventListener('input', function() {
+            const moduleCount = parseInt(this.value);
+            document.getElementById('moduleCount').textContent = moduleCount;
+            calculateFeneconCapacity();
+        });
+
+        function calculateFeneconCapacity() {
+            const moduleCount = parseInt(document.getElementById('feneconModules').value);
+            const baseCapacity = 8.4; // kWh
+            const perModule = 2.8; // kWh
+            const additionalCapacity = moduleCount * perModule;
+            const totalCapacity = baseCapacity + additionalCapacity;
+            
+            document.getElementById('speicherkapazitaet').textContent = totalCapacity.toFixed(1);
+            document.getElementById('additionalCapacity').textContent = additionalCapacity.toFixed(1);
+        }
+
+        // kWp Rechner mit AIKO Modul
+        const AIKO_MODULE_WP = 475; // Wp
+        
+        document.getElementById('modulAnzahl').addEventListener('input', function() {
+            const moduleCount = parseInt(this.value);
+            document.getElementById('moduleAnzahlDisplay').textContent = moduleCount;
+            calculateKWp();
+        });
+
+        function calculateKWp() {
+            const modulAnzahl = parseInt(document.getElementById('modulAnzahl').value) || 0;
+            const kwp = (modulAnzahl * AIKO_MODULE_WP) / 1000;
+            document.getElementById('kwpResult').textContent = kwp.toFixed(2);
+        }
+
+        // Zerez ID anzeigen
+        document.getElementById('wechselrichter').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const zerezId = selectedOption.getAttribute('data-zerez');
+            const zerezDiv = document.getElementById('zerezIdWR');
+            
+            if (zerezId) {
+                zerezDiv.textContent = 'Zerez ID: ' + zerezId;
+                zerezDiv.classList.add('show');
+            } else {
+                zerezDiv.classList.remove('show');
+            }
+        });
+
+        // Datum auf heute setzen
+        document.getElementById('datum').valueAsDate = new Date();
+
+        // Form Submit
+        document.getElementById('pvForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            formData = {
+                kunde: {
+                    name: document.getElementById('kundenname').value,
+                    email: document.getElementById('email').value,
+                    telefon: document.getElementById('telefon').value,
+                    strasse: document.getElementById('strasse').value,
+                    plz: document.getElementById('plz').value,
+                    ort: document.getElementById('ort').value
+                },
+                system: {
+                    wechselrichter: document.getElementById('wechselrichter').options[document.getElementById('wechselrichter').selectedIndex].text,
+                    zerezId: document.getElementById('wechselrichter').options[document.getElementById('wechselrichter').selectedIndex].getAttribute('data-zerez'),
+                    speicher: document.getElementById('speicher').value,
+                    // Fenecon Home
+                    feneconModule: document.getElementById('speicher').value === 'Fenecon Home' ? document.getElementById('feneconModules').value : null,
+                    feneconKapazitaet: document.getElementById('speicher').value === 'Fenecon Home' ? document.getElementById('speicherkapazitaet').textContent : null,
+                    // Sigenergy
+                    sigenergyBasis: document.getElementById('speicher').value === 'Sigenergy' ? sigenergyBasisCapacity : null,
+                    sigenergy6kwModule: document.getElementById('speicher').value === 'Sigenergy' ? document.getElementById('sigen6kwModules').value : null,
+                    sigenergy9kwModule: document.getElementById('speicher').value === 'Sigenergy' ? document.getElementById('sigen9kwModules').value : null,
+                    sigenergyKapazitaet: document.getElementById('speicher').value === 'Sigenergy' ? document.getElementById('sigenergyKapazitaet').textContent : null
+                },
+                anlage: {
+                    pvModul: 'AIKO-A475-MCE54Db Neostar 3S+',
+                    modulLeistung: 475,
+                    modulAnzahl: document.getElementById('modulAnzahl').value,
+                    kwp: document.getElementById('kwpResult').textContent,
+                    dachausrichtung: document.getElementById('dachausrichtung').value,
+                    dachneigung: document.getElementById('dachneigung').value,
+                    stromverbrauch: document.getElementById('stromverbrauch').value,
+                    wallbox: document.getElementById('wallbox').value
+                },
+                bemerkungen: document.getElementById('bemerkungen').value,
+                datum: document.getElementById('datum').value,
+                fotos: uploadedPhotos
+            };
+
+            showSummary();
+        });
+
+        function showSummary() {
+            var html = '<div class="summary-grid">';
+            
+            // Kundendaten Card
+            html += '<div class="summary-card">';
+            html += '<h3>Kundendaten</h3>';
+            html += '<div class="summary-item"><span class="summary-label">Name:</span><span class="summary-value">' + formData.kunde.name + '</span></div>';
+            html += '<div class="summary-item"><span class="summary-label">E-Mail:</span><span class="summary-value">' + formData.kunde.email + '</span></div>';
+            html += '<div class="summary-item"><span class="summary-label">Telefon:</span><span class="summary-value">' + formData.kunde.telefon + '</span></div>';
+            if (formData.kunde.strasse) {
+                html += '<div class="summary-item"><span class="summary-label">Straße:</span><span class="summary-value">' + formData.kunde.strasse + '</span></div>';
+            }
+            if (formData.kunde.plz || formData.kunde.ort) {
+                var ortText = '';
+                if (formData.kunde.plz) ortText += formData.kunde.plz;
+                if (formData.kunde.plz && formData.kunde.ort) ortText += ' ';
+                if (formData.kunde.ort) ortText += formData.kunde.ort;
+                html += '<div class="summary-item"><span class="summary-label">PLZ / Ort:</span><span class="summary-value">' + ortText + '</span></div>';
+            }
+            html += '</div>';
+            
+            // System Card
+            html += '<div class="summary-card">';
+            html += '<h3>Gewähltes System</h3>';
+            html += '<div class="summary-item"><span class="summary-label">Wechselrichter:</span><span class="summary-value">' + formData.system.wechselrichter + '</span></div>';
+            if (formData.system.zerezId) {
+                html += '<div class="summary-item"><span class="summary-label">WR Zerez ID:</span><span class="summary-value">' + formData.system.zerezId + '</span></div>';
+            }
+            if (formData.system.speicher) {
+                html += '<div class="summary-item"><span class="summary-label">Speichersystem:</span><span class="summary-value">' + formData.system.speicher + '</span></div>';
+                
+                // Fenecon Home
+                if (formData.system.speicher === 'Fenecon Home' && formData.system.feneconModule !== null) {
+                    html += '<div class="summary-item"><span class="summary-label">Batterie Module:</span><span class="summary-value">' + formData.system.feneconModule + '</span></div>';
+                    html += '<div class="summary-item"><span class="summary-label">Speicherkapazität:</span><span class="summary-value" style="color: #0066cc; font-weight: 600;">' + formData.system.feneconKapazitaet + ' kWh</span></div>';
+                }
+                
+                // Sigenergy
+                if (formData.system.speicher === 'Sigenergy' && formData.system.sigenergyBasis !== null) {
+                    html += '<div class="summary-item"><span class="summary-label">Basis:</span><span class="summary-value">' + formData.system.sigenergyBasis + ' kWh</span></div>';
+                    html += '<div class="summary-item"><span class="summary-label">6 kWh Module:</span><span class="summary-value">' + formData.system.sigenergy6kwModule + '</span></div>';
+                    html += '<div class="summary-item"><span class="summary-label">9 kWh Module:</span><span class="summary-value">' + formData.system.sigenergy9kwModule + '</span></div>';
+                    html += '<div class="summary-item"><span class="summary-label">Gesamt-Speicherkapazität:</span><span class="summary-value" style="color: #0066cc; font-weight: 600;">' + formData.system.sigenergyKapazitaet + ' kWh</span></div>';
+                }
+            }
+            html += '</div>';
+            
+            html += '</div>';
+            
+            // Highlight Box für kWp
+            html += '<div class="highlight-box">';
+            html += '<div class="big-number">' + formData.anlage.kwp + ' kWp</div>';
+            html += '<div class="label">Gesamtleistung der Anlage</div>';
+            html += '<div style="margin-top: 15px; font-size: 14px; color: #666;">';
+            html += formData.anlage.modulAnzahl + ' Module × ' + formData.anlage.modulLeistung + ' Wp';
+            html += '<br><span style="color: #0066cc; font-weight: 500;">' + formData.anlage.pvModul + '</span>';
+            html += '</div>';
+            html += '</div>';
+            
+            // Anlagendetails Card
+            html += '<div class="summary-card">';
+            html += '<h3>Anlagendetails</h3>';
+            if (formData.anlage.dachausrichtung) {
+                html += '<div class="summary-item"><span class="summary-label">Dachausrichtung:</span><span class="summary-value">' + formData.anlage.dachausrichtung + '</span></div>';
+            }
+            if (formData.anlage.dachneigung) {
+                html += '<div class="summary-item"><span class="summary-label">Dachneigung:</span><span class="summary-value">' + formData.anlage.dachneigung + '°</span></div>';
+            }
+            if (formData.anlage.stromverbrauch) {
+                html += '<div class="summary-item"><span class="summary-label">Jahresverbrauch:</span><span class="summary-value">' + formData.anlage.stromverbrauch + ' kWh</span></div>';
+            }
+            html += '<div class="summary-item"><span class="summary-label">Wallbox:</span><span class="summary-value">' + formData.anlage.wallbox + '</span></div>';
+            html += '</div>';
+            
+            // Bemerkungen
+            if (formData.bemerkungen) {
+                html += '<div class="summary-card">';
+                html += '<h3>Bemerkungen</h3>';
+                html += '<p style="color: #2d2d2d; line-height: 1.6;">' + formData.bemerkungen + '</p>';
+                html += '</div>';
+            }
+            
+            // Fotos
+            if (formData.fotos && formData.fotos.length > 0) {
+                html += '<div class="summary-card">';
+                html += '<h3>Fotos (' + formData.fotos.length + ')</h3>';
+                html += '<div class="foto-preview">';
+                formData.fotos.forEach(function(photo) {
+                    html += '<div class="foto-item">';
+                    html += '<img src="' + photo.data + '" alt="' + photo.name + '">';
+                    html += '</div>';
+                });
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            // Datum
+            html += '<div class="summary-item" style="margin-top: 20px; padding: 15px; background: #fafafa;">';
+            html += '<span class="summary-label">Datum:</span><span class="summary-value">' + formData.datum + '</span>';
+            html += '</div>';
+            
+            document.getElementById('summaryContent').innerHTML = html;
+            
+            // Seiten wechseln
+            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('summarySection').style.display = 'block';
+        }
+
+        function backToForm() {
+            document.getElementById('summarySection').style.display = 'none';
+            document.getElementById('formSection').style.display = 'block';
+        }
+
+        async function sendPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+                
+                // PDF Header
+                pdf.setFillColor(0, 102, 204);
+                pdf.rect(0, 0, 210, 40, 'F');
+                
+                pdf.setTextColor(255, 255, 255);
+                pdf.setFontSize(22);
+                pdf.text('PV DATEN FÜR ELEKTRIKER PARTNER', 105, 18, { align: 'center' });
+                
+                pdf.setFontSize(11);
+                pdf.text('Hoffmann Metallbau GmbH & CO. KG • Meerbusch', 105, 28, { align: 'center' });
+                
+                // Blue Line
+                pdf.setDrawColor(0, 102, 204);
+                pdf.setLineWidth(2);
+                pdf.line(0, 40, 210, 40);
+                
+                let yPos = 55;
+                
+                // Content
+                pdf.setTextColor(0, 0, 0);
+                pdf.setFontSize(16);
+                pdf.text('Kundendaten', 20, yPos);
+                yPos += 10;
+                
+                pdf.setFontSize(11);
+                pdf.text('Name: ' + formData.kunde.name, 25, yPos);
+                yPos += 7;
+                pdf.text('E-Mail: ' + formData.kunde.email, 25, yPos);
+                yPos += 7;
+                pdf.text('Telefon: ' + formData.kunde.telefon, 25, yPos);
+                yPos += 7;
+                
+                if (formData.kunde.strasse) {
+                    pdf.text('Strasse: ' + formData.kunde.strasse, 25, yPos);
+                    yPos += 7;
+                }
+                
+                if (formData.kunde.plz || formData.kunde.ort) {
+                    var ortText = '';
+                    if (formData.kunde.plz) ortText += formData.kunde.plz;
+                    if (formData.kunde.plz && formData.kunde.ort) ortText += ' ';
+                    if (formData.kunde.ort) ortText += formData.kunde.ort;
+                    pdf.text('PLZ / Ort: ' + ortText, 25, yPos);
+                    yPos += 7;
+                }
+                
+                yPos += 10;
+                
+                // System
+                pdf.setFontSize(16);
+                pdf.text('Gewähltes System', 20, yPos);
+                yPos += 10;
+                
+                pdf.setFontSize(11);
+                pdf.text('Wechselrichter: ' + formData.system.wechselrichter, 25, yPos);
+                yPos += 7;
+                
+                if (formData.system.zerezId) {
+                    pdf.text('WR Zerez ID: ' + formData.system.zerezId, 25, yPos);
+                    yPos += 7;
+                }
+                
+                if (formData.system.speicher) {
+                    pdf.text('Speichersystem: ' + formData.system.speicher, 25, yPos);
+                    yPos += 7;
+                    
+                    // Fenecon Home
+                    if (formData.system.speicher === 'Fenecon Home' && formData.system.feneconModule !== null) {
+                        pdf.text('Batterie Module: ' + formData.system.feneconModule, 25, yPos);
+                        yPos += 7;
+                        pdf.setTextColor(0, 102, 204);
+                        pdf.setFontSize(14);
+                        pdf.text('Speicherkapazitaet: ' + formData.system.feneconKapazitaet + ' kWh', 25, yPos);
+                        pdf.setTextColor(0, 0, 0);
+                        pdf.setFontSize(11);
+                        yPos += 7;
+                    }
+                    
+                    // Sigenergy
+                    if (formData.system.speicher === 'Sigenergy' && formData.system.sigenergyBasis !== null) {
+                        pdf.text('Basis: ' + formData.system.sigenergyBasis + ' kWh', 25, yPos);
+                        yPos += 7;
+                        pdf.text('6 kWh Module: ' + formData.system.sigenergy6kwModule, 25, yPos);
+                        yPos += 7;
+                        pdf.text('9 kWh Module: ' + formData.system.sigenergy9kwModule, 25, yPos);
+                        yPos += 7;
+                        pdf.setTextColor(0, 102, 204);
+                        pdf.setFontSize(14);
+                        pdf.text('Gesamt-Speicherkapazitaet: ' + formData.system.sigenergyKapazitaet + ' kWh', 25, yPos);
+                        pdf.setTextColor(0, 0, 0);
+                        pdf.setFontSize(11);
+                        yPos += 7;
+                    }
+                }
+                
+                yPos += 10;
+                
+                // kWp Highlight Box
+                pdf.setFillColor(0, 102, 204);
+                pdf.rect(20, yPos, 170, 25, 'F');
+                
+                pdf.setTextColor(255, 255, 255);
+                pdf.setFontSize(24);
+                pdf.text(formData.anlage.kwp + ' kWp', 105, yPos + 12, { align: 'center' });
+                
+                pdf.setFontSize(10);
+                pdf.text('Gesamtleistung der Anlage', 105, yPos + 20, { align: 'center' });
+                
+                yPos += 35;
+                
+                // Anlagendetails
+                pdf.setTextColor(0, 0, 0);
+                pdf.setFontSize(16);
+                pdf.text('Anlagendetails', 20, yPos);
+                yPos += 10;
+                
+                pdf.setFontSize(11);
+                pdf.text('PV Modul: ' + formData.anlage.pvModul, 25, yPos);
+                yPos += 7;
+                pdf.text('Anzahl Module: ' + formData.anlage.modulAnzahl, 25, yPos);
+                yPos += 7;
+                pdf.text('Leistung pro Modul: ' + formData.anlage.modulLeistung + ' Wp', 25, yPos);
+                yPos += 7;
+                
+                if (formData.anlage.dachausrichtung) {
+                    pdf.text('Dachausrichtung: ' + formData.anlage.dachausrichtung, 25, yPos);
+                    yPos += 7;
+                }
+                
+                if (formData.anlage.dachneigung) {
+                    pdf.text('Dachneigung: ' + formData.anlage.dachneigung + '°', 25, yPos);
+                    yPos += 7;
+                }
+                
+                if (formData.anlage.stromverbrauch) {
+                    pdf.text('Jahresverbrauch: ' + formData.anlage.stromverbrauch + ' kWh', 25, yPos);
+                    yPos += 7;
+                }
+                
+                pdf.text('Wallbox: ' + formData.anlage.wallbox, 25, yPos);
+                yPos += 7;
+                
+                // Bemerkungen
+                if (formData.bemerkungen) {
+                    yPos += 10;
+                    pdf.setFontSize(16);
+                    pdf.text('Bemerkungen', 20, yPos);
+                    yPos += 10;
+                    
+                    pdf.setFontSize(11);
+                    const splitText = pdf.splitTextToSize(formData.bemerkungen, 170);
+                    pdf.text(splitText, 25, yPos);
+                    yPos += (splitText.length * 7);
+                }
+                
+                // Datum
+                yPos += 10;
+                pdf.setFontSize(11);
+                pdf.text('Datum: ' + formData.datum, 25, yPos);
+                
+                // Fotos
+                if (formData.fotos && formData.fotos.length > 0) {
+                    yPos += 15;
+                    
+                    // Check if we need a new page
+                    if (yPos > 200) {
+                        pdf.addPage();
+                        yPos = 20;
+                    }
+                    
+                    pdf.setFontSize(16);
+                    pdf.text('Fotos (' + formData.fotos.length + ')', 20, yPos);
+                    yPos += 10;
+                    
+                    // Add photos to PDF (max 2 per page)
+                    for (let i = 0; i < formData.fotos.length; i++) {
+                        if (yPos > 200 || (i > 0 && i % 2 === 0)) {
+                            pdf.addPage();
+                            yPos = 20;
+                        }
+                        
+                        try {
+                            const imgData = formData.fotos[i].data;
+                            const imgWidth = 170;
+                            const imgHeight = 120;
+                            
+                            pdf.addImage(imgData, 'JPEG', 20, yPos, imgWidth, imgHeight);
+                            
+                            pdf.setFontSize(9);
+                            pdf.setTextColor(100, 100, 100);
+                            pdf.text('Foto ' + (i + 1) + ': ' + formData.fotos[i].name, 20, yPos + imgHeight + 7);
+                            
+                            yPos += imgHeight + 15;
+                        } catch (error) {
+                            console.error('Error adding photo ' + (i + 1) + ' to PDF:', error);
+                        }
+                    }
+                    
+                    pdf.setTextColor(0, 0, 0);
+                }
+                
+                // Footer - Position on last page
+                const lastPageHeight = pdf.internal.pageSize.height;
+                pdf.setDrawColor(0, 102, 204);
+                pdf.line(20, lastPageHeight - 15, 190, lastPageHeight - 15);
+                pdf.setFontSize(9);
+                pdf.setTextColor(100, 100, 100);
+                pdf.text('Hoffmann Metallbau GmbH & CO. KG • info@hofmet.de', 105, lastPageHeight - 10, { align: 'center' });
+                
+                // Dateiname
+                const filename = 'PV-Daten-Elektriker_' + formData.kunde.name.replace(/\s+/g, '_') + '_' + formData.datum + '.pdf';
+                
+                // E-Mail Vorbereitung
+                const emailSubject = 'PV-Daten Elektriker Partner: ' + formData.kunde.name;
+                const emailBody = 'Sehr geehrte Damen und Herren,\n\n' +
+                    'im Anhang finden Sie die PV-Daten für Elektriker Partner.\n\n' +
+                    'Kundendaten:\n' +
+                    'Name: ' + formData.kunde.name + '\n' +
+                    'E-Mail: ' + formData.kunde.email + '\n' +
+                    'Telefon: ' + formData.kunde.telefon + 
+                    (formData.kunde.strasse ? '\nStraße: ' + formData.kunde.strasse : '') +
+                    (formData.kunde.plz || formData.kunde.ort ? '\nPLZ / Ort: ' + (formData.kunde.plz || '') + (formData.kunde.plz && formData.kunde.ort ? ' ' : '') + (formData.kunde.ort || '') : '') + '\n\n' +
+                    'System:\n' +
+                    'Wechselrichter: ' + formData.system.wechselrichter +
+                    (formData.system.zerezId ? '\nWR Zerez ID: ' + formData.system.zerezId : '') +
+                    (formData.system.speicher ? '\nSpeichersystem: ' + formData.system.speicher : '') +
+                    // Fenecon Home
+                    (formData.system.speicher === 'Fenecon Home' && formData.system.feneconModule !== null ? '\nBatterie Module: ' + formData.system.feneconModule : '') +
+                    (formData.system.speicher === 'Fenecon Home' && formData.system.feneconKapazitaet ? '\nSpeicherkapazitaet: ' + formData.system.feneconKapazitaet + ' kWh' : '') +
+                    // Sigenergy
+                    (formData.system.speicher === 'Sigenergy' && formData.system.sigenergyBasis !== null ? '\nBasis: ' + formData.system.sigenergyBasis + ' kWh' : '') +
+                    (formData.system.speicher === 'Sigenergy' && formData.system.sigenergy6kwModule !== null ? '\n6 kWh Module: ' + formData.system.sigenergy6kwModule : '') +
+                    (formData.system.speicher === 'Sigenergy' && formData.system.sigenergy9kwModule !== null ? '\n9 kWh Module: ' + formData.system.sigenergy9kwModule : '') +
+                    (formData.system.speicher === 'Sigenergy' && formData.system.sigenergyKapazitaet ? '\nGesamt-Speicherkapazitaet: ' + formData.system.sigenergyKapazitaet + ' kWh' : '') +
+                    '\n\n' +
+                    'Anlage:\n' +
+                    'PV Modul: ' + formData.anlage.pvModul + '\n' +
+                    'Gesamtleistung: ' + formData.anlage.kwp + ' kWp\n' +
+                    'Module: ' + formData.anlage.modulAnzahl + ' × ' + formData.anlage.modulLeistung + ' Wp' +
+                    (formData.anlage.dachausrichtung ? '\nDachausrichtung: ' + formData.anlage.dachausrichtung : '') +
+                    (formData.anlage.dachneigung ? '\nDachneigung: ' + formData.anlage.dachneigung + '°' : '') +
+                    (formData.anlage.stromverbrauch ? '\nJahresverbrauch: ' + formData.anlage.stromverbrauch + ' kWh' : '') +
+                    '\nWallbox: ' + formData.anlage.wallbox +
+                    (formData.bemerkungen ? '\n\nBemerkungen:\n' + formData.bemerkungen : '') +
+                    (formData.fotos && formData.fotos.length > 0 ? '\n\nFotos: ' + formData.fotos.length + ' Foto(s) im PDF enthalten' : '') +
+                    '\n\nDatum: ' + formData.datum +
+                    '\n\nDie vollständige Zusammenfassung und alle Fotos finden Sie im angehängten PDF.';
+
+                // PDF speichern
+                pdf.save(filename);
+                
+                // Mailto Link
+                const mailtoLink = 'mailto:info@hofmet.de?subject=' + encodeURIComponent(emailSubject) + '&body=' + encodeURIComponent(emailBody);
+                
+                alert('✓ PDF wurde erstellt: ' + filename + '\n\nIhr E-Mail-Programm wird nun geöffnet.\nBitte hängen Sie das heruntergeladene PDF manuell an die E-Mail an info@hofmet.de an.');
+                
+                window.location.href = mailtoLink;
+                
+            } catch (error) {
+                console.error('Fehler:', error);
+                alert('Fehler beim Erstellen des PDFs. Bitte versuchen Sie es erneut.');
+            }
+        }
+
+        // Initial Calculation
+        calculateKWp();
+    </script>
+</body>
+</html>
